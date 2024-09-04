@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,16 +30,20 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.webviewsampleapp.ui.theme.WebViewSampleAppTheme
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.dp
+import java.util.Calendar
+import java.util.Date
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             WebViewSampleAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val lazyListState = rememberLazyListState()
+                    val currentTime = Calendar.getInstance().time
                     LazyColumn(
                         modifier = Modifier.padding(innerPadding),
                         state = lazyListState
@@ -48,6 +53,7 @@ class MainActivity : ComponentActivity() {
                         }
                         item {
                             WebViewWrapper(webContent = Data.customWebContent, modifier = Modifier.fillMaxWidth())
+                            // DifferentViewWrapper(currentTime)
                         }
                         item {
                             Text(text = "LAST Item ", modifier = Modifier.fillMaxWidth().padding(20.dp))
@@ -91,6 +97,25 @@ fun WebViewWrapper(
         },
         update = { webView ->
             webView.loadDataWithBaseURL(null, webContent, "text/html; charset=utf-8", "UTF-8", null)
+        }
+    )
+}
+
+
+@Composable
+fun DifferentViewWrapper(
+    currentTime : Date,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier
+            .alpha(0.99f)
+        ,
+        factory = { context ->
+            TextView(context).apply {
+                text = "This is a different view, not a WebView.\n Current time is: $currentTime"
+                height = 800
+            }
         }
     )
 }
