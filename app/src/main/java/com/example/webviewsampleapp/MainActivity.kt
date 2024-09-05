@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -45,13 +46,22 @@ class MainActivity : ComponentActivity() {
         setContent {
             WebViewSampleAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    var scrollPosition by rememberSaveable { mutableIntStateOf(0) }
                     Column(
-                        modifier = Modifier.padding(innerPadding).verticalScroll(rememberScrollState())
+                        modifier = Modifier.padding(innerPadding).verticalScroll(rememberScrollState(
+                            scrollPosition
+                        ))
                     ) {
                         repeat(50) { index ->
                             Text(text = "Item $index", modifier = Modifier.fillMaxWidth())
                         }
-                        WebViewWrapper(webContent = Data.customWebContent, modifier = Modifier.fillMaxWidth())
+                        WebViewWrapper(
+                            webContent = Data.customWebContent,
+                            modifier = Modifier.fillMaxWidth(),
+
+                            scrollPosition = scrollPosition,
+                            onScrollChange = { newScrollPosition -> scrollPosition = newScrollPosition }
+                        )
                         Text(text = "LAST Item", modifier = Modifier.fillMaxWidth().padding(20.dp))
                     }
                 }
@@ -63,7 +73,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WebViewWrapper(
     webContent : String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    scrollPosition: Int,
+    onScrollChange: (Int) -> Unit
 ) {
 
     var redirectUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -88,6 +100,15 @@ fun WebViewWrapper(
 
                 @SuppressLint("SetJavaScriptEnabled")
                 this.settings.javaScriptEnabled = true
+
+                post {
+                    scrollTo(0, scrollPosition)
+                }
+
+                // Track the scroll changes
+                setOnScrollChangeListener { _, _, scrollY, _, _ ->
+                    onScrollChange(scrollY)
+                }
             }
         },
         update = { webView ->
