@@ -1,7 +1,6 @@
 package com.example.webviewsampleapp
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.WebResourceRequest
@@ -11,28 +10,28 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.webviewsampleapp.ui.theme.WebViewSampleAppTheme
-import kotlin.math.roundToInt
-import androidx.compose.ui.unit.dp
-import java.util.Calendar
 import java.util.Date
 
 class MainActivity : ComponentActivity() {
@@ -44,24 +43,28 @@ class MainActivity : ComponentActivity() {
         setContent {
             WebViewSampleAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val lazyListState = rememberLazyListState()
-                    var webViewHeight by remember { mutableIntStateOf(10) }
-                    LazyColumn(
-                        modifier = Modifier.padding(innerPadding),
-                        state = lazyListState
+                    var webViewHeight by rememberSaveable { mutableIntStateOf(300) }
+                    Column(
+                        modifier = Modifier.padding(innerPadding).verticalScroll(rememberScrollState()),
+
                     ) {
-                        items(50) {
+                        repeat(50) {
                             Text(text = "Item $it", modifier = Modifier.fillMaxWidth())
                         }
-                        item {
-                            WebViewWrapper(webContent = Data.customWebContent, modifier = Modifier.fillMaxWidth().height(webViewHeight.dp), calculatedHeight = { heightInt ->
+                        WebViewWrapper(
+                            webContent = Data.customWebContent,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(webViewHeight.dp),
+                            calculatedHeight = { heightInt ->
                                 webViewHeight = heightInt
                             })
-                            // DifferentViewWrapper(currentTime)
-                        }
-                        item {
-                            Text(text = "LAST Item ", modifier = Modifier.fillMaxWidth().padding(20.dp))
-                        }
+                        Text(
+                            text = "LAST Item ",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp)
+                        )
                     }
                 }
             }
@@ -71,7 +74,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WebViewWrapper(
-    webContent : String,
+    webContent: String,
     modifier: Modifier = Modifier,
     calculatedHeight: (Int) -> Unit = {}
 ) {
@@ -80,8 +83,7 @@ fun WebViewWrapper(
 
     AndroidView(
         modifier = modifier
-            .alpha(0.99f)
-        ,
+            .alpha(0.99f),
         factory = { context ->
             WebView(context).apply {
                 webViewClient = object : WebViewClient() {
@@ -97,7 +99,13 @@ fun WebViewWrapper(
 
                     override fun onPageFinished(view: WebView?, url: String?) {
                         view?.post {
-                            loadDataWithBaseURL(null, webContent, "text/html; charset=utf-8", "UTF-8", null)
+                            loadDataWithBaseURL(
+                                null,
+                                webContent,
+                                "text/html; charset=utf-8",
+                                "UTF-8",
+                                null
+                            )
                             calculatedHeight.invoke(view.contentHeight)
                         }
                     }
@@ -116,13 +124,12 @@ fun WebViewWrapper(
 
 @Composable
 fun DifferentViewWrapper(
-    currentTime : Date,
+    currentTime: Date,
     modifier: Modifier = Modifier
 ) {
     AndroidView(
         modifier = modifier
-            .alpha(0.99f)
-        ,
+            .alpha(0.99f),
         factory = { context ->
             TextView(context).apply {
                 text = "This is a different view, not a WebView.\n Current time is: $currentTime"
