@@ -21,7 +21,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -43,7 +45,7 @@ class MainActivity : ComponentActivity() {
             WebViewSampleAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val lazyListState = rememberLazyListState()
-                    val currentTime = Calendar.getInstance().time
+                    var webViewHeight by remember { mutableIntStateOf(10) }
                     LazyColumn(
                         modifier = Modifier.padding(innerPadding),
                         state = lazyListState
@@ -52,7 +54,9 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Item $it", modifier = Modifier.fillMaxWidth())
                         }
                         item {
-                            WebViewWrapper(webContent = Data.customWebContent, modifier = Modifier.fillMaxWidth())
+                            WebViewWrapper(webContent = Data.customWebContent, modifier = Modifier.fillMaxWidth().height(webViewHeight.dp), calculatedHeight = { heightInt ->
+                                webViewHeight = heightInt
+                            })
                             // DifferentViewWrapper(currentTime)
                         }
                         item {
@@ -68,7 +72,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WebViewWrapper(
     webContent : String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    calculatedHeight: (Int) -> Unit = {}
 ) {
 
     var redirectUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -89,10 +94,17 @@ fun WebViewWrapper(
                         }
                         return true
                     }
-                }
 
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        view?.post {
+                            loadDataWithBaseURL(null, webContent, "text/html; charset=utf-8", "UTF-8", null)
+                            calculatedHeight.invoke(view.contentHeight)
+                        }
+                    }
+                }
                 @SuppressLint("SetJavaScriptEnabled")
                 this.settings.javaScriptEnabled = true
+
             }
         },
         update = { webView ->
