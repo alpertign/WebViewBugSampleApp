@@ -11,12 +11,15 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,22 +45,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             WebViewSampleAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val lazyListState = rememberLazyListState()
-                    val currentTime = Calendar.getInstance().time
-                    LazyColumn(
-                        modifier = Modifier.padding(innerPadding),
-                        state = lazyListState
+                    Column(
+                        modifier = Modifier.padding(innerPadding).verticalScroll(rememberScrollState())
                     ) {
-                        items(50) {
-                            Text(text = "Item $it", modifier = Modifier.fillMaxWidth())
+                        repeat(50) { index ->
+                            Text(text = "Item $index", modifier = Modifier.fillMaxWidth())
                         }
-                        item {
-                            WebViewWrapper(webContent = Data.customWebContent, modifier = Modifier.fillMaxWidth())
-                            // DifferentViewWrapper(currentTime)
-                        }
-                        item {
-                            Text(text = "LAST Item ", modifier = Modifier.fillMaxWidth().padding(20.dp))
-                        }
+                        WebViewWrapper(webContent = Data.customWebContent, modifier = Modifier.fillMaxWidth())
+                        Text(text = "LAST Item", modifier = Modifier.fillMaxWidth().padding(20.dp))
                     }
                 }
             }
